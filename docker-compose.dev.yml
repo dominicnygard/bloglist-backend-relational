@@ -1,0 +1,37 @@
+services:
+  postgresql:
+    image: postgres
+    environment:
+      POSTGRES_USER: blogs_user
+      POSTGRES_PASSWORD: blogs_password
+      POSTGRES_DB: bloglist_database
+    ports:
+      - 5433:5432
+    volumes:
+      - postgre_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U blogs_user -d bloglist_database"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  server:
+    build:
+      context: .
+      dockerfile: dev.Dockerfile
+    image: bloglist-backend-dev
+    container_name: bloglist-backend
+    volumes:
+      - ./:/usr/src/app
+      - /usr/src/app/node_modules
+    ports:
+      - 3001:3001
+    environment:
+      DATABASE_URL: postgres://blogs_user:blogs_password@postgresql:5432/bloglist_database
+      CHOKIDAR_USEPOLLING: "true"
+    depends_on:
+      postgresql:
+        condition: service_healthy
+
+volumes:
+  postgre_data:

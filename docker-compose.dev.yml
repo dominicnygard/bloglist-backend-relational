@@ -28,6 +28,7 @@ services:
       - 3001:3001
     environment:
       DATABASE_URL: postgres://blogs_user:blogs_password@postgresql:5432/bloglist_database
+      SECRET: dev_secret
       CHOKIDAR_USEPOLLING: "true"
     depends_on:
       postgresql:

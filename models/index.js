@@ -1,5 +1,10 @@
 const Blog = require("./blog");
+const User = require("./user");
 
-void Blog.sync();
+User.hasMany(Blog, { foreignKey: "userId" });
+Blog.belongsTo(User, { foreignKey: "userId" });
 
-module.exports = { Blog };
+Blog.sync({ alter: true });
+User.sync({ alter: true });
+
+module.exports = { Blog, User };

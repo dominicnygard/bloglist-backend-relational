@@ -1,6 +1,12 @@
 const express = require("express");
+const jwt = require("jsonwebtoken");
 
 const { Blog } = require("../models");
+const { User } = require("../models");
+const errorHandler = require("../util/errorHandler");
+
+const { SECRET } = require("../util/config");
+const { Op } = require("sequelize");
 
 const router = express.Router();
 
@@ -13,41 +19,67 @@ const blogFinder = async (req, res, next) => {
   return next();
 };
 
-const errorHandler = (err, _req, res, next) => {
-  console.error(err.message);
-
-  if (err.name === "CastError") {
-    return res.status(400).send({ error: "Malformatted id" });
+const tokenExtractor = (req, res, next) => {
+  const authorization = req.get("authorization");
+  if (authorization && authorization.toLowerCase().startsWith("bearer ")) {
+    try {
+      req.decodedToken = jwt.verify(authorization.substring(7), SECRET);
+    } catch {
+      return res.status(401).json({ error: "token invalid" });
+    }
+  } else {
+    return res.status(401).json({ error: "token missing" });
   }
-
-  if (err.name === "SequelizeValidationError") {
-    return res.status(400).send({ error: err.message });
-  }
-
-  if (err.name === "SequelizeDatabaseError") {
-    return res
-      .status(400)
-      .send({ error: err.original?.message ?? err.message });
-  }
-
-  return next(err);
+  next();
 };
 
-router.get("/", async (_req, res) => {
-  const blogs = await Blog.findAll();
+router.get("/", async (req, res) => {
+  const where = {};
+
+  if (req.query.search) {
+    const search = String(req.query.search).trim();
+
+    where[Op.or] = [
+      {
+        title: {
+          [Op.iLike]: `%${search}%`,
+        },
+      },
+      {
+        author: {
+          [Op.iLike]: `%${search}%`,
+        },
+      },
+    ];
+  }
+
+  const blogs = await Blog.findAll({
+    attributes: { exclude: ["userId"] },
+    include: {
+      model: User,
+      attributes: ["name"],
+    },
+    where,
+    order: [["likes", "DESC"]],
+  });
   res.json(blogs);
 });
 
-router.post("/", async (req, res, next) => {
+router.post("/", tokenExtractor, async (req, res, next) => {
   try {
-    const blog = await Blog.create(req.body);
+    const user = await User.findByPk(req.decodedToken.id);
+    const blog = await Blog.create({ ...req.body, userId: user.id });
     return res.json(blog);
   } catch (error) {
     return next(error);
   }
 });
 
-router.delete("/:id", blogFinder, async (req, res) => {
+router.delete("/:id", tokenExtractor, blogFinder, async (req, res) => {
+  if (req.blog.userId !== req.decodedToken.id) {
+    return res.status(403).json({ error: "forbidden" });
+  }
+
   await req.blog.destroy();
   res.status(204).end();
 });

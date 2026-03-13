@@ -17,7 +17,8 @@
   "scripts": {
     "dev": "node --watch index.js",
     "lint": "eslint .",
-    "start": "node index.js"
+    "start": "node index.js",
+    "test": "node --test --test-concurrency=1 tests/api_ch3.test.js"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -25,8 +26,11 @@
     "eslint": "^10.0.3"
   },
   "dependencies": {
+    "axios": "^1.13.6",
+    "bcrypt": "^6.0.0",
     "dotenv": "^17.3.1",
     "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
     "pg": "^8.20.0",
     "sequelize": "^6.37.8"
   }

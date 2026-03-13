@@ -30,9 +30,16 @@ app.use("/api/authors", authorRouter);
 
 const start = async () => {
   await connectToDatabase();
+
+  await User.sync({ alter: true });
+  await Blog.sync({ alter: true });
+
   app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
   });
 };
 
-void start();
+start().catch((error) => {
+  console.error("Failed to start application", error);
+  process.exit(1);
+});

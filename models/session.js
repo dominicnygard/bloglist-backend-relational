@@ -2,40 +2,23 @@ const { Model, DataTypes } = require("sequelize");
 
 const { sequelize } = require("../util/db");
 
-class Blog extends Model {}
+class Session extends Model {}
 
-Blog.init(
+Session.init(
   {
     id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
       autoIncrement: true,
     },
-    author: {
-      type: DataTypes.TEXT,
-    },
-    url: {
+    token: {
       type: DataTypes.TEXT,
       allowNull: false,
+      unique: true,
     },
-    title: {
-      type: DataTypes.TEXT,
+    user_id: {
+      type: DataTypes.INTEGER,
       allowNull: false,
-    },
-    likes: {
-      type: DataTypes.INTEGER,
-      defaultValue: 0,
-    },
-    year: {
-      type: DataTypes.INTEGER,
-      validate: {
-        min: 1991,
-        max: 2026,
-      },
-    },
-    userId: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
       references: {
         model: "users",
         key: "id",
@@ -46,8 +29,8 @@ Blog.init(
     sequelize,
     underscored: true,
     timestamps: true,
-    modelName: "blog",
+    modelName: "session",
   },
 );
 
-module.exports = Blog;
+module.exports = Session;

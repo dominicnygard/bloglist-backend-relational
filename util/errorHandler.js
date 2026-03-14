@@ -21,6 +21,30 @@ const formatValidationMessage = (error) => {
     return `${field} cannot be empty`;
   }
 
+  if (error.validatorKey === "min") {
+    const minValue = Array.isArray(error.validatorArgs)
+      ? error.validatorArgs[0]
+      : null;
+
+    if (minValue !== null && minValue !== undefined) {
+      return `${field} must be ${minValue} or later`;
+    }
+
+    return `${field} is too low`;
+  }
+
+  if (error.validatorKey === "max") {
+    const maxValue = Array.isArray(error.validatorArgs)
+      ? error.validatorArgs[0]
+      : null;
+
+    if (maxValue !== null && maxValue !== undefined) {
+      return `${field} must be ${maxValue} or earlier`;
+    }
+
+    return `${field} is too high`;
+  }
+
   return error.message;
 };
 
